@@ -2,9 +2,35 @@ import heapq
 import itertools
 
 
-# ==========================================
+# ============================================================
+# 8-PUZZLE SOLVER USING A* SEARCH
+# ============================================================
+#
+# Goal State:
+#
+#     1 2 3
+#     4 5 6
+#     7 8 0
+#
+# 0 represents the blank space.
+#
+# A* formula:
+#
+#     f(n) = g(n) + h(n)
+#
+# g(n) = cost from start state to current state
+# h(n) = estimated cost from current state to goal
+# f(n) = total estimated cost
+#
+# Two heuristics are implemented:
+# 1. Misplaced Tiles
+# 2. Manhattan Distance
+# ============================================================
+
+
+# ============================================================
 # GOAL STATE
-# ==========================================
+# ============================================================
 
 GOAL = (
     1, 2, 3,
@@ -13,14 +39,32 @@ GOAL = (
 )
 
 
-# ==========================================
+# ============================================================
 # HEURISTIC 1: MISPLACED TILES
-# ==========================================
+# ============================================================
 
 def misplaced_tiles(state):
+    """
+    Count the number of tiles that are not in their
+    correct goal positions.
+
+    The blank tile (0) is ignored.
+
+    Example:
+        Current:
+        1 3 2
+        4 5 6
+        7 8 0
+
+        Only 2 and 3 are misplaced.
+
+        h(n) = 2
+    """
+
     count = 0
 
     for i in range(9):
+
         # Ignore blank tile
         if state[i] != 0 and state[i] != GOAL[i]:
             count += 1
@@ -28,86 +72,138 @@ def misplaced_tiles(state):
     return count
 
 
-# ==========================================
+# ============================================================
 # HEURISTIC 2: MANHATTAN DISTANCE
-# ==========================================
+# ============================================================
 
 def manhattan_distance(state):
+    """
+    Calculate the Manhattan Distance.
+
+    For each tile:
+
+        |current_row - goal_row|
+        +
+        |current_column - goal_column|
+
+    The blank tile (0) is ignored.
+    """
+
     distance = 0
 
-    for i in range(9):
+    for current_index in range(9):
 
-        tile = state[i]
+        tile = state[current_index]
 
         # Ignore blank tile
-        if tile != 0:
+        if tile == 0:
+            continue
 
-            current_row, current_col = divmod(i, 3)
+        # Current row and column
+        current_row, current_col = divmod(
+            current_index, 3
+        )
 
-            goal_index = GOAL.index(tile)
-            goal_row, goal_col = divmod(goal_index, 3)
+        # Goal position of this tile
+        goal_index = GOAL.index(tile)
 
-            distance += abs(current_row - goal_row)
-            distance += abs(current_col - goal_col)
+        goal_row, goal_col = divmod(
+            goal_index, 3
+        )
+
+        # Add horizontal and vertical distance
+        distance += abs(
+            current_row - goal_row
+        )
+
+        distance += abs(
+            current_col - goal_col
+        )
 
     return distance
 
 
-# ==========================================
+# ============================================================
 # GENERATE NEIGHBORING STATES
-# ==========================================
+# ============================================================
 
 def get_neighbors(state):
+    """
+    Generate all possible states by moving the blank tile.
+
+    The blank can move:
+        Up
+        Down
+        Left
+        Right
+
+    depending on its current position.
+    """
 
     neighbors = []
 
-    # Find blank tile
-    zero_index = state.index(0)
+    # Find blank position
+    blank_index = state.index(0)
 
-    row, col = divmod(zero_index, 3)
+    row, col = divmod(
+        blank_index, 3
+    )
 
-    # Possible movements:
-    # Up, Down, Left, Right
+    # Possible movements
     moves = [
-        (-1, 0),
-        (1, 0),
-        (0, -1),
-        (0, 1)
+        (-1, 0),     # Up
+        (1, 0),      # Down
+        (0, -1),     # Left
+        (0, 1)       # Right
     ]
 
-    for dr, dc in moves:
+    for row_change, col_change in moves:
 
-        new_row = row + dr
-        new_col = col + dc
+        new_row = row + row_change
+        new_col = col + col_change
 
-        # Check valid position
+        # Check whether the new position is valid
         if 0 <= new_row < 3 and 0 <= new_col < 3:
 
             new_index = new_row * 3 + new_col
 
-            # Convert tuple to list
+            # Convert tuple to list so we can swap values
             new_state = list(state)
 
-            # Swap blank and tile
-            new_state[zero_index], new_state[new_index] = \
-                new_state[new_index], new_state[zero_index]
+            # Move blank tile
+            new_state[blank_index], new_state[new_index] = (
+                new_state[new_index],
+                new_state[blank_index]
+            )
 
             # Convert back to tuple
-            neighbors.append(tuple(new_state))
+            neighbors.append(
+                tuple(new_state)
+            )
 
     return neighbors
 
 
-# ==========================================
-# CHECK PUZZLE SOLVABILITY
-# ==========================================
+# ============================================================
+# CHECK WHETHER PUZZLE IS SOLVABLE
+# ============================================================
 
 def is_solvable(state):
+    """
+    Check whether an 8-puzzle is solvable.
 
-    # Remove blank
+    For a 3x3 puzzle:
+        Even number of inversions = solvable
+        Odd number of inversions  = unsolvable
+
+    An inversion occurs when a larger tile appears
+    before a smaller tile.
+    """
+
+    # Remove blank tile
     values = [
-        x for x in state
-        if x != 0
+        tile for tile in state
+        if tile != 0
     ]
 
     inversions = 0
@@ -120,30 +216,49 @@ def is_solvable(state):
             if values[i] > values[j]:
                 inversions += 1
 
-    # For a 3x3 puzzle:
-    # Even number of inversions = solvable
     return inversions % 2 == 0
 
 
-# ==========================================
-# A* SEARCH
-# ==========================================
+# ============================================================
+# A* SEARCH ALGORITHM
+# ============================================================
 
 def a_star(start, heuristic):
+    """
+    Solve the puzzle using A* Search.
 
-    # Counter is used to break priority ties
+    Parameters:
+        start     : initial puzzle state
+        heuristic : heuristic function
+
+    Returns:
+        path     : list of states from start to goal
+        expanded : number of nodes expanded
+    """
+
+    # Counter provides deterministic tie-breaking
     counter = itertools.count()
 
     # Calculate initial heuristic
     h = heuristic(start)
 
     # Priority queue
-    # (f, g, counter, state)
+    #
+    # Each item:
+    # (f_cost, g_cost, counter, state)
+    #
+    # f(n) = g(n) + h(n)
+
     priority_queue = [
-        (h, 0, next(counter), start)
+        (
+            h,
+            0,
+            next(counter),
+            start
+        )
     ]
 
-    # Best cost to reach each state
+    # Best known cost from start to each state
     g_cost = {
         start: 0
     }
@@ -153,67 +268,75 @@ def a_star(start, heuristic):
         start: None
     }
 
-    # Number of expanded nodes
+    # Number of nodes expanded
     expanded = 0
 
+    # Continue until queue is empty
     while priority_queue:
 
-        # Get state with smallest f value
+        # Remove state with lowest f value
         f, g, _, current = heapq.heappop(
             priority_queue
         )
 
-        # Ignore outdated entry
+        # Ignore outdated queue entries
         if g != g_cost.get(current):
             continue
 
-        # Count expanded node
+        # Count this node as expanded
         expanded += 1
 
-        # Goal reached
+        # ----------------------------------------------------
+        # GOAL CHECK
+        # ----------------------------------------------------
+
         if current == GOAL:
 
             path = []
 
             state = current
 
-            # Reconstruct solution path
+            # Reconstruct path by following parents
             while state is not None:
 
                 path.append(state)
 
                 state = parent[state]
 
-            # Reverse path
+            # Reverse path to get:
+            # start -> goal
             path.reverse()
 
             return path, expanded
 
-        # Generate neighbors
+        # ----------------------------------------------------
+        # GENERATE SUCCESSORS
+        # ----------------------------------------------------
+
         for neighbor in get_neighbors(current):
 
-            # Each move has cost 1
+            # Every move costs 1
             new_g = g + 1
 
-            # If a better path is found
+            # If this is a better path to the neighbor
             if new_g < g_cost.get(
                 neighbor,
-                float('inf')
+                float("inf")
             ):
 
-                # Store new cost
+                # Save the better cost
                 g_cost[neighbor] = new_g
 
-                # Store parent
+                # Save parent
                 parent[neighbor] = current
 
                 # Calculate heuristic
                 h = heuristic(neighbor)
 
-                # f(n) = g(n) + h(n)
+                # Calculate f(n)
                 f = new_g + h
 
-                # Add to priority queue
+                # Add neighbor to priority queue
                 heapq.heappush(
                     priority_queue,
                     (
@@ -228,11 +351,14 @@ def a_star(start, heuristic):
     return None, expanded
 
 
-# ==========================================
-# PRINT PUZZLE
-# ==========================================
+# ============================================================
+# PRINT PUZZLE STATE
+# ============================================================
 
 def print_state(state):
+    """
+    Display a puzzle state as a 3x3 grid.
+    """
 
     for i in range(0, 9, 3):
 
@@ -245,186 +371,163 @@ def print_state(state):
     print()
 
 
-# ==========================================
-# MAIN PROGRAM
-# ==========================================
+# ============================================================
+# PRINT SOLUTION PATH
+# ============================================================
 
-def main():
+def print_solution(path):
+    """
+    Print every state in the solution path.
+    """
 
-    print("======================================")
-    print("          8-PUZZLE A* SOLVER")
-    print("======================================")
+    if path is None:
+        print("No solution found.")
+        return
 
-    print()
+    for step, state in enumerate(path):
+
+        print("Step", step)
+        print_state(state)
+
+
+# ============================================================
+# VALIDATE USER INPUT
+# ============================================================
+
+def get_user_input():
+    """
+    Read and validate the initial puzzle state.
+
+    The user must enter:
+        9 numbers
+        containing every number from 0 to 8 exactly once.
+    """
+
     print("Enter 9 numbers separated by spaces.")
     print("Use 0 for the blank space.")
     print()
 
-    # ======================================
-    # GET USER INPUT
-    # ======================================
-
-    user_input = input("Enter initial state: ")
+    user_input = input(
+        "Enter initial state: "
+    )
 
     try:
 
-        start = tuple(
+        state = tuple(
             map(int, user_input.split())
         )
 
     except ValueError:
 
-        print("\nInvalid input!")
-        print("Please enter numbers only.")
-        return
+        print()
+        print("ERROR: Please enter numbers only.")
+        return None
 
-    # ======================================
-    # VALIDATE NUMBER OF VALUES
-    # ======================================
+    # Check number of values
+    if len(state) != 9:
 
-    if len(start) != 9:
+        print()
+        print("ERROR: Please enter exactly 9 numbers.")
+        return None
 
-        print("\nInvalid puzzle!")
-        print("Please enter exactly 9 numbers.")
-        return
+    # Check that numbers 0-8 are used exactly once
+    if set(state) != set(range(9)):
 
-    # ======================================
-    # VALIDATE NUMBERS
-    # ======================================
-
-    if set(start) != set(range(9)):
-
-        print("\nInvalid puzzle!")
-
+        print()
         print(
-            "Use every number from 0 to 8 exactly once."
+            "ERROR: Use every number from 0 to 8 exactly once."
         )
 
-        return
+        return None
 
-    # ======================================
-    # CHECK SOLVABILITY
-    # ======================================
+    return state
 
-    if not is_solvable(start):
 
-        print("\n======================================")
-        print("         PUZZLE NOT SOLVABLE")
-        print("======================================")
+# ============================================================
+# DISPLAY HEURISTIC VALUES
+# ============================================================
 
-        return
+def display_heuristic_values(state):
+    """
+    Display the initial heuristic values.
+    """
 
-    # ======================================
-    # DISPLAY INITIAL STATE
-    # ======================================
+    misplaced = misplaced_tiles(state)
 
-    print("\n======================================")
-    print("           INITIAL STATE")
-    print("======================================")
-
-    print_state(start)
-
-    # ======================================
-    # RUN A* WITH MISPLACED TILES
-    # ======================================
-
-    print("Running A* with Misplaced Tiles...")
-
-    path1, expanded1 = a_star(
-        start,
-        misplaced_tiles
-    )
-
-    # ======================================
-    # RUN A* WITH MANHATTAN DISTANCE
-    # ======================================
-
-    print("Running A* with Manhattan Distance...")
-
-    path2, expanded2 = a_star(
-        start,
-        manhattan_distance
-    )
-
-    # ======================================
-    # MISPLACED TILES RESULT
-    # ======================================
-
-    print("\n======================================")
-    print("       MISPLACED TILES HEURISTIC")
-    print("======================================")
-
-    print(
-        "Solution Cost:",
-        len(path1) - 1
-    )
-
-    print(
-        "Nodes Expanded:",
-        expanded1
-    )
-
-    print("\nSolution Path:")
-
-    for i, state in enumerate(path1):
-
-        print("Step", i)
-
-        print_state(state)
-
-    # ======================================
-    # MANHATTAN DISTANCE RESULT
-    # ======================================
-
-    print("======================================")
-    print("      MANHATTAN DISTANCE HEURISTIC")
-    print("======================================")
-
-    print(
-        "Solution Cost:",
-        len(path2) - 1
-    )
-
-    print(
-        "Nodes Expanded:",
-        expanded2
-    )
-
-    print("\nSolution Path:")
-
-    for i, state in enumerate(path2):
-
-        print("Step", i)
-
-        print_state(state)
-
-    # ======================================
-    # HEURISTIC COMPARISON
-    # ======================================
-
-    print("======================================")
-    print("          HEURISTIC COMPARISON")
-    print("======================================")
+    manhattan = manhattan_distance(state)
 
     print()
+    print("Initial Heuristic Values")
+    print("------------------------")
 
     print(
         "Misplaced Tiles :",
-        expanded1,
-        "nodes expanded"
+        misplaced
     )
 
     print(
         "Manhattan       :",
-        expanded2,
-        "nodes expanded"
+        manhattan
     )
 
-    # ======================================
-    # COMPARE NODES
-    # ======================================
+
+# ============================================================
+# DISPLAY COMPARISON
+# ============================================================
+
+def display_comparison(
+    path1,
+    expanded1,
+    path2,
+    expanded2
+):
+    """
+    Compare both heuristics based on:
+    - Solution cost
+    - Nodes expanded
+    """
+
+    cost1 = len(path1) - 1
+    cost2 = len(path2) - 1
 
     print()
+    print("=" * 55)
+    print("                 HEURISTIC COMPARISON")
+    print("=" * 55)
+
+    print()
+
+    print(
+        "{:<25} {:<15} {:<15}".format(
+            "Heuristic",
+            "Solution Cost",
+            "Nodes Expanded"
+        )
+    )
+
+    print("-" * 55)
+
+    print(
+        "{:<25} {:<15} {:<15}".format(
+            "Misplaced Tiles",
+            cost1,
+            expanded1
+        )
+    )
+
+    print(
+        "{:<25} {:<15} {:<15}".format(
+            "Manhattan Distance",
+            cost2,
+            expanded2
+        )
+    )
+
+    print()
+
+    # --------------------------------------------------------
+    # Compare nodes
+    # --------------------------------------------------------
 
     if expanded2 < expanded1:
 
@@ -434,11 +537,11 @@ def main():
         ) * 100
 
         print(
-            "Manhattan Distance expanded fewer nodes."
+            "Result: Manhattan Distance expanded fewer nodes."
         )
 
         print(
-            "Node reduction: {:.2f}%".format(
+            "Nodes reduced by: {:.2f}%".format(
                 reduction
             )
         )
@@ -451,11 +554,11 @@ def main():
         ) * 100
 
         print(
-            "Misplaced Tiles expanded fewer nodes."
+            "Result: Misplaced Tiles expanded fewer nodes."
         )
 
         print(
-            "Node reduction: {:.2f}%".format(
+            "Nodes reduced by: {:.2f}%".format(
                 reduction
             )
         )
@@ -463,42 +566,310 @@ def main():
     else:
 
         print(
-            "Both heuristics expanded the same number of nodes."
+            "Result: Both heuristics expanded the same number of nodes."
         )
 
-    # ======================================
-    # FINAL CONCLUSION
-    # ======================================
+    # --------------------------------------------------------
+    # Compare solution costs
+    # --------------------------------------------------------
 
     print()
-    print("======================================")
-    print("             CONCLUSION")
-    print("======================================")
+
+    if cost1 == cost2:
+
+        print(
+            "Both heuristics found solutions with the same cost."
+        )
+
+        print(
+            "Therefore, both produced an optimal solution for this puzzle."
+        )
+
+    else:
+
+        print(
+            "The solution costs are different."
+        )
+
+
+# ============================================================
+# DISPLAY CONCLUSION
+# ============================================================
+
+def display_conclusion():
+    """
+    Display the theoretical conclusion of the comparison.
+    """
+
+    print()
+    print("=" * 55)
+    print("                    CONCLUSION")
+    print("=" * 55)
+
+    print()
 
     print(
-        "Both heuristics are admissible."
+        "Misplaced Tiles only checks whether a tile is"
     )
 
     print(
-        "Both produce an optimal solution."
+        "in the correct position or not."
+    )
+
+    print()
+
+    print(
+        "Manhattan Distance measures how far each tile"
     )
 
     print(
-        "Manhattan Distance is more informed"
+        "is from its goal position."
+    )
+
+    print()
+
+    print(
+        "Therefore, Manhattan Distance is generally"
     )
 
     print(
-        "because it considers the distance"
+        "a more informed heuristic."
+    )
+
+    print()
+
+    print(
+        "Both heuristics are admissible because they"
     )
 
     print(
-        "of each tile from its goal position."
+        "do not overestimate the actual remaining cost."
+    )
+
+    print()
+
+    print(
+        "A* can therefore use these heuristics to find"
+    )
+
+    print(
+        "an optimal solution."
+    )
+
+    print()
+
+    print(
+        "A more informed heuristic generally allows"
+    )
+
+    print(
+        "A* to focus the search better and expand"
+    )
+
+    print(
+        "fewer nodes."
     )
 
 
-# ==========================================
-# START PROGRAM
-# ==========================================
+# ============================================================
+# MAIN FUNCTION
+# ============================================================
+
+def main():
+
+    print("=" * 55)
+    print("             8-PUZZLE A* SOLVER")
+    print("=" * 55)
+
+    print()
+    print("Goal State:")
+    print_state(GOAL)
+
+    # --------------------------------------------------------
+    # Get initial state
+    # --------------------------------------------------------
+
+    start = get_user_input()
+
+    # Invalid input
+    if start is None:
+        return
+
+    # --------------------------------------------------------
+    # Display initial state
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 55)
+    print("                  INITIAL STATE")
+    print("=" * 55)
+
+    print_state(start)
+
+    # --------------------------------------------------------
+    # Check if already solved
+    # --------------------------------------------------------
+
+    if start == GOAL:
+
+        print("The puzzle is already solved.")
+
+        print()
+        print("Solution Cost: 0")
+        print("Nodes Expanded: 1")
+
+        return
+
+    # --------------------------------------------------------
+    # Check solvability
+    # --------------------------------------------------------
+
+    if not is_solvable(start):
+
+        print("=" * 55)
+        print("               PUZZLE NOT SOLVABLE")
+        print("=" * 55)
+
+        print()
+        print(
+            "This puzzle cannot reach the goal state."
+        )
+
+        print(
+            "Please enter a different puzzle."
+        )
+
+        return
+
+    print("Puzzle is solvable.")
+
+    # --------------------------------------------------------
+    # Display heuristic values
+    # --------------------------------------------------------
+
+    display_heuristic_values(start)
+
+    # --------------------------------------------------------
+    # Run A* with Misplaced Tiles
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 55)
+    print("       RUNNING A* - MISPLACED TILES")
+    print("=" * 55)
+
+    path1, expanded1 = a_star(
+        start,
+        misplaced_tiles
+    )
+
+    # --------------------------------------------------------
+    # Run A* with Manhattan Distance
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 55)
+    print("       RUNNING A* - MANHATTAN DISTANCE")
+    print("=" * 55)
+
+    path2, expanded2 = a_star(
+        start,
+        manhattan_distance
+    )
+
+    # --------------------------------------------------------
+    # Check whether solutions were found
+    # --------------------------------------------------------
+
+    if path1 is None or path2 is None:
+
+        print()
+        print("ERROR: A solution could not be found.")
+
+        return
+
+    # --------------------------------------------------------
+    # Display Misplaced Tiles result
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 55)
+    print("             MISPLACED TILES RESULT")
+    print("=" * 55)
+
+    print()
+
+    print(
+        "Solution Cost:",
+        len(path1) - 1
+    )
+
+    print(
+        "Nodes Expanded:",
+        expanded1
+    )
+
+    print()
+
+    print("Solution Path:")
+    print()
+
+    print_solution(path1)
+
+    # --------------------------------------------------------
+    # Display Manhattan Distance result
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 55)
+    print("           MANHATTAN DISTANCE RESULT")
+    print("=" * 55)
+
+    print()
+
+    print(
+        "Solution Cost:",
+        len(path2) - 1
+    )
+
+    print(
+        "Nodes Expanded:",
+        expanded2
+    )
+
+    print()
+
+    print("Solution Path:")
+    print()
+
+    print_solution(path2)
+
+    # --------------------------------------------------------
+    # Compare heuristics
+    # --------------------------------------------------------
+
+    display_comparison(
+        path1,
+        expanded1,
+        path2,
+        expanded2
+    )
+
+    # --------------------------------------------------------
+    # Final conclusion
+    # --------------------------------------------------------
+
+    display_conclusion()
+
+    print()
+    print("=" * 55)
+    print("                  PROGRAM COMPLETE")
+    print("=" * 55)
+
+
+# ============================================================
+# PROGRAM ENTRY POINT
+# ============================================================
 
 if __name__ == "__main__":
     main()
