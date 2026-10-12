@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}About the Project — AI Search & CSP Solver{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">About the Project</h1>
+    <p class="page-subtitle">Academic foundations, algorithmic explanations, and comparative theory for college AI evaluation.</p>
+</div>
+
+<div class="about-grid">
+    <!-- Project Overview Card -->
+    <article class="card about-card">
+        <h2 class="card-section-title">1. Project Overview &amp; Objectives</h2>
+        <p>
+            <strong>Project Title:</strong> <em>8-Puzzle Solver using A* — Search vs. Constraint Satisfaction Study</em><br>
+            <strong>Discipline:</strong> College Artificial Intelligence &amp; Machine Learning Project
+        </p>
+        <p>
+            This project provides a comprehensive practical comparison between two fundamental paradigms in Artificial Intelligence:
+        </p>
+        <ul>
+            <li><strong>State-Space Heuristic Search (A* Search):</strong> Applied to the sliding-tile 8-Puzzle to discover an optimal sequence of transitions (minimum path cost).</li>
+            <li><strong>Constraint Satisfaction Problems (CSPs):</strong> Applied to 4x4 and 9x9 Sudoku to find a consistent assignment of values across a network of binary inequality constraints.</li>
+        </ul>
+    </article>
+
+    <!-- Technologies Card -->
+    <article class="card about-card">
+        <h2 class="card-section-title">2. Technology Stack</h2>
+        <ul class="tech-list">
+            <li><strong>Backend Framework:</strong> Python Flask (Lightweight REST API &amp; Template Rendering)</li>
+            <li><strong>Frontend:</strong> Semantic HTML5, Vanilla CSS3, Modern Vanilla JavaScript (ES6+)</li>
+            <li><strong>Core AI Libraries:</strong> Python Standard Library Only:
+                <ul>
+                    <li><code>heapq</code>: Priority queue for A* node exploration.</li>
+                    <li><code>collections.deque</code>: Efficient arc queue management for AC-3.</li>
+                    <li><code>itertools.count</code>: Deterministic tie-breaking for priority queue order.</li>
+                    <li><code>time.perf_counter</code>: High-resolution hardware timing for empirical benchmarking.</li>
+                    <li><code>unittest</code>: Automated regression and acceptance testing.</li>
+                </ul>
+            </li>
+        </ul>
+    </article>
+
+    <!-- State Space Search Card -->
+    <article class="card about-card">
+        <h2 class="card-section-title">3. Heuristic Search &amp; 8-Puzzle Concepts</h2>
+        <h3>The A* Search Algorithm</h3>
+        <p>
+            A* evaluates states using the function: <strong>f(n) = g(n) + h(n)</strong>, where:
+        </p>
+        <ul>
+            <li><strong>g(n):</strong> The exact path cost from the start configuration to node $n$.</li>
+            <li><strong>h(n):</strong> The heuristic estimate of the remaining cost from $n$ to the goal.</li>
+            <li><strong>f(n):</strong> The estimated total cost of the cheapest solution passing through $n$.</li>
+        </ul>
+
+        <h3>Admissible Heuristics</h3>
+        <ul>
+            <li><strong>Misplaced Tiles:</strong> Counts the number of non-blank tiles not in their goal position. Admissible because each misplaced tile requires at least 1 move.</li>
+            <li><strong>Manhattan Distance:</strong> Computes $\sum |r - r_{goal}| + |c - c_{goal}|$ across all non-blank tiles. Strictly dominates Misplaced Tiles because every misplaced tile contributes $\ge 1$, and more distant tiles contribute higher values without overestimating.</li>
+        </ul>
+
+        <h3>Inversion Parity Solvability Invariant</h3>
+        <p>
+            For a 3x3 board, an inversion is a pair of tiles $(a, b)$ where $a$ appears before $b$ in row-major order, but $a > b$.
+            Horizontal blank slides do not change tile order; vertical slides alter inversions by $+2$, $-2$, or $0$.
+            Therefore, <strong>the parity (even/odd) of the inversion count is an invariant</strong>.
+            Because the standard goal state has 0 inversions (EVEN), any puzzle with an <strong>ODD</strong> inversion count is mathematically proven to be unsolvable and is rejected before search starts.
+        </p>
+    </article>
+
+    <!-- CSP Concepts Card -->
+    <article class="card about-card">
+        <h2 class="card-section-title">4. Constraint Satisfaction &amp; Sudoku Concepts</h2>
+        <h3>CSP Formulation: &lang;X, D, C&rang;</h3>
+        <ul>
+            <li><strong>Variables (X):</strong> 16 (for 4x4) or 81 (for 9x9) cell variables $X_{r, c}$.</li>
+            <li><strong>Domains (D):</strong> Allowed numbers $\{1..N\}$ for empty cells; $\{d\}$ for initial clues.</li>
+            <li><strong>Constraints (C):</strong> All-Different relations across each row, column, and subgrid, modeled as binary inequality arcs $(X_i \ne X_j)$ between peer cells.</li>
+        </ul>
+
+        <h3>The 4 Solving Algorithms</h3>
+        <ol>
+            <li><strong>Plain Backtracking:</strong> Baseline Depth-First Search with row-major variable selection and ascending value assignment.</li>
+            <li><strong>Backtracking + MRV (Minimum Remaining Values):</strong> The *"fail-first"* heuristic. Selects the unassigned cell with the smallest domain size, triggering conflicts near the top of the search tree rather than deep in dead-end branches.</li>
+            <li><strong>Forward Checking:</strong> Whenever a variable receives a value, that value is immediately pruned from the domains of all unassigned peers. If any peer domain is wiped out to size 0, the branch fails immediately.</li>
+            <li><strong>AC-3 (Arc Consistency Algorithm 3):</strong> Propagates constraints across directed arcs. If variable $X_j$ has only one possible value $\{y\}$, then $y$ is removed from $X_i$'s domain. If $X_i$'s domain shrinks, AC-3 propagates this revision backwards to all variables constraining $X_i$.</li>
+        </ol>
+    </article>
+
+    <!-- Comparison Table Card -->
+    <article class="card about-card full-width">
+        <h2 class="card-section-title">5. Theoretical Comparison: Search vs. CSP</h2>
+        <div class="table-responsive">
+            <table class="table comparison-table">
+                <thead>
+                    <tr>
+                        <th>Comparison Dimension</th>
+                        <th>State-Space Search (8-Puzzle)</th>
+                        <th>Constraint Satisfaction (Sudoku)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Primary Objective</strong></td>
+                        <td>Find an optimal <em>sequence of actions</em> (path).</td>
+                        <td>Find a <em>valid complete assignment</em> of variables.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>State Representation</strong></td>
+                        <td>Atomic board configuration tuple.</td>
+                        <td>Factored variables with discrete domain sets.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transitions / Moves</strong></td>
+                        <td>Tile slides (Up, Down, Left, Right). Order matters.</td>
+                        <td>Variable assignment. Order has no physical cost.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Path Cost</strong></td>
+                        <td>Crucial ($g(n)$ accumulated moves).</td>
+                        <td>Irrelevant (only final consistency matters).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Search Strategy</strong></td>
+                        <td>Best-First Search (A* with priority queue).</td>
+                        <td>Depth-First Backtracking + Domain Propagation.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Heuristic Role</strong></td>
+                        <td>Guides search towards goal ($h(n)$ distance).</td>
+                        <td>Prunes branching factor (MRV, LCV).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Optimality</strong></td>
+                        <td>Guaranteed minimum moves if $h$ is admissible.</td>
+                        <td>Feasibility (any valid board satisfies constraints).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Practical Applications</strong></td>
+                        <td>GPS route planning, robotics, gaming AI.</td>
+                        <td>Scheduling, timetabling, circuit placement, resource allocation.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+</div>
+{% endblock %}

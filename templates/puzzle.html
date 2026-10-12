@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}8-Puzzle Solver — AI Search & CSP Solver{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">8-Puzzle Solver using A* Search</h1>
+    <p class="page-subtitle">Interactive sliding tile puzzle with admissible heuristics, solvability auditing, rule-based hints, and Explainable AI.</p>
+</div>
+
+<div class="puzzle-layout">
+    <!-- Left Column: Input Grid & Controls -->
+    <div class="card puzzle-control-card">
+        <h2 class="card-section-title">Puzzle Board Configuration</h2>
+        <p class="helper-text">Enter numbers 0 to 8 (use <strong>0</strong> for the blank space), or choose a preset.</p>
+
+        <!-- Preset Selector -->
+        <div class="form-group">
+            <label for="puzzle-preset" class="form-label">Load Preset Example:</label>
+            <select id="puzzle-preset" class="form-select">
+                <option value="1,2,3,4,0,6,7,5,8" selected>Standard (2 Moves) — 1 2 3 / 4 0 6 / 7 5 8</option>
+                <option value="1,2,3,4,5,6,7,0,8">Easy (1 Move) — 1 2 3 / 4 5 6 / 7 0 8</option>
+                <option value="1,2,3,0,4,6,7,5,8">Standard (4 Moves) — 1 2 3 / 0 4 6 / 7 5 8</option>
+                <option value="1,3,6,5,0,2,4,7,8">Medium (8 Moves) — 1 3 6 / 5 0 2 / 4 7 8</option>
+                <option value="1,2,3,4,5,6,8,7,0">Unsolvable (Odd Inversions) — 1 2 3 / 4 5 6 / 8 7 0</option>
+                <option value="1,2,3,4,5,6,7,8,0">Goal State (0 Moves) — 1 2 3 / 4 5 6 / 7 8 0</option>
+            </select>
+        </div>
+
+        <!-- 3x3 Grid Input -->
+        <div class="puzzle-grid-container">
+            <div class="puzzle-grid" id="puzzle-inputs">
+                <!-- 9 input boxes -->
+                <input type="number" min="0" max="8" class="tile-input" id="tile-0" value="1">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-1" value="2">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-2" value="3">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-3" value="4">
+                <input type="number" min="0" max="8" class="tile-input blank-tile" id="tile-4" value="0">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-5" value="6">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-6" value="7">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-7" value="5">
+                <input type="number" min="0" max="8" class="tile-input" id="tile-8" value="8">
+            </div>
+        </div>
+
+        <!-- Heuristic Selection -->
+        <div class="form-group">
+            <label for="heuristic-select" class="form-label">A* Heuristic Function:</label>
+            <select id="heuristic-select" class="form-select">
+                <option value="manhattan" selected>Manhattan Distance (Informed &amp; Admissible)</option>
+                <option value="misplaced">Misplaced Tiles (Coarse &amp; Admissible)</option>
+            </select>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-group">
+            <button id="btn-solve-puzzle" class="btn btn-primary">Solve Puzzle</button>
+            <button id="btn-check-solvability" class="btn btn-secondary">Check Solvability</button>
+            <button id="btn-get-hint" class="btn btn-secondary">Get Hint</button>
+            <button id="btn-reset-puzzle" class="btn btn-outline">Reset</button>
+        </div>
+
+        <!-- Status & Error Alert -->
+        <div id="puzzle-alert" class="alert d-none"></div>
+    </div>
+
+    <!-- Right Column: Results & Interactive Stepper -->
+    <div class="card puzzle-result-card">
+        <h2 class="card-section-title">Results &amp; Solution Analysis</h2>
+
+        <!-- Placeholder until an action is executed -->
+        <div id="puzzle-placeholder" class="placeholder-box">
+            <p>Configure the 3x3 board and click <strong>Solve Puzzle</strong>, <strong>Check Solvability</strong>, or <strong>Get Hint</strong> to view real algorithm outputs.</p>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="puzzle-loading" class="loading-box d-none">
+            <div class="spinner"></div>
+            <p>Running A* algorithm on backend...</p>
+        </div>
+
+        <!-- Solvability Audit Output -->
+        <div id="solvability-output" class="solvability-box d-none">
+            <div class="solvability-header">
+                <span id="solvability-badge" class="badge"></span>
+                <h3 id="solvability-title">Inversion Parity Audit</h3>
+            </div>
+            <div class="solvability-details">
+                <p><strong>Inversion Count:</strong> <span id="solvability-inversions"></span> (<span id="solvability-parity"></span> Parity)</p>
+                <p><strong>Non-Blank Tile Order:</strong> <span id="solvability-sequence"></span></p>
+                <p><strong>Inversion Pairs:</strong> <span id="solvability-pairs"></span></p>
+                <div class="rule-explanation">
+                    <strong>Mathematical Invariant:</strong>
+                    <p id="solvability-rule"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hint Output -->
+        <div id="hint-output" class="hint-box d-none">
+            <h3 class="hint-title">Rule-Based Move Recommendation</h3>
+            <div class="hint-grid">
+                <div class="hint-metric">
+                    <span class="metric-label">Recommended Blank Move:</span>
+                    <span id="hint-move" class="metric-val"></span>
+                </div>
+                <div class="hint-metric">
+                    <span class="metric-label">Tile to Slide:</span>
+                    <span id="hint-tile" class="metric-val"></span>
+                </div>
+                <div class="hint-metric">
+                    <span class="metric-label">Current Manhattan:</span>
+                    <span id="hint-curr-h" class="metric-val"></span>
+                </div>
+                <div class="hint-metric">
+                    <span class="metric-label">New Manhattan:</span>
+                    <span id="hint-new-h" class="metric-val"></span>
+                </div>
+            </div>
+            <div class="hint-reason-box">
+                <strong>Transparent Rationale:</strong>
+                <p id="hint-reason"></p>
+            </div>
+            <div id="optimal-hint-box" class="optimal-hint-box d-none">
+                <strong>Guaranteed Optimal A* Next Step:</strong>
+                <p id="optimal-hint-text"></p>
+            </div>
+        </div>
+
+        <!-- Solution Stepper Output -->
+        <div id="solution-output" class="solution-box d-none">
+            <!-- Stats Ribbon -->
+            <div class="metrics-ribbon">
+                <div class="metric-card">
+                    <span class="metric-num" id="sol-cost">0</span>
+                    <span class="metric-label">Solution Moves</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-num" id="sol-nodes">0</span>
+                    <span class="metric-label">Nodes Expanded</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-num" id="sol-time">0</span>
+                    <span class="metric-label">Runtime (ms)</span>
+                </div>
+            </div>
+
+            <!-- Visual Stepper Board -->
+            <div class="stepper-section">
+                <div class="stepper-board-container">
+                    <div class="stepper-board" id="stepper-board">
+                        <!-- 9 visual tiles rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="stepper-controls">
+                    <button id="btn-prev-step" class="btn btn-secondary">&larr; Previous Step</button>
+                    <span id="stepper-indicator" class="stepper-indicator">Step 0 of 0</span>
+                    <button id="btn-next-step" class="btn btn-secondary">Next Step &rarr;</button>
+                </div>
+            </div>
+
+            <!-- Explainable AI (XAI) Cost & Attribution Details -->
+            <div class="xai-details-panel">
+                <h4>Explainable AI (XAI) Step Breakdown</h4>
+                <div class="xai-cost-bar">
+                    <span><strong>g(n):</strong> <span id="xai-g">0</span> (Path Cost)</span>
+                    <span><strong>h(n):</strong> <span id="xai-h">0</span> (Heuristic)</span>
+                    <span><strong>f(n) = g + h:</strong> <span id="xai-f">0</span> (Total Est.)</span>
+                    <span><strong>Action:</strong> <span id="xai-action">Start</span></span>
+                </div>
+                <p class="xai-desc" id="xai-desc">Initial puzzle state.</p>
+
+                <!-- Per-Tile Manhattan Breakdown Table -->
+                <div class="table-responsive">
+                    <table class="table xai-tile-table">
+                        <thead>
+                            <tr>
+                                <th>Tile</th>
+                                <th>Current Pos (r, c)</th>
+                                <th>Goal Pos (r, c)</th>
+                                <th>Manhattan Dist</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="xai-tile-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

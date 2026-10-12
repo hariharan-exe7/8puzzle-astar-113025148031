@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Search & CSP Solver{% endblock %} — College AI Project</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Header & Navigation -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="branding">
+                <a href="{{ url_for('index') }}" class="site-title">AI Search &amp; CSP Solver</a>
+                <span class="site-subtitle">8-Puzzle A* Search &amp; Sudoku Constraint Satisfaction</span>
+            </div>
+            <nav class="main-nav">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+                <a href="{{ url_for('puzzle') }}" class="nav-link {% if request.path == '/puzzle' %}active{% endif %}">8-Puzzle</a>
+                <a href="{{ url_for('sudoku') }}" class="nav-link {% if request.path == '/sudoku' %}active{% endif %}">Sudoku</a>
+                <a href="{{ url_for('comparison') }}" class="nav-link {% if request.path == '/comparison' %}active{% endif %}">Comparison</a>
+                <a href="{{ url_for('about') }}" class="nav-link {% if request.path == '/about' %}active{% endif %}">About</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="page-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p><strong>8-Puzzle Solver using A* — Search vs. Constraint Satisfaction Study</strong></p>
+            <p class="footer-note">College Artificial Intelligence &amp; Machine Learning Project &bull; Python Flask &amp; Standard Library</p>
+        </div>
+    </footer>
+
+    <!-- Global Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

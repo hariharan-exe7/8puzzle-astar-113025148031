@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Algorithm Comparison — AI Search & CSP Solver{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Heuristic Search &amp; CSP Performance Comparison</h1>
+    <p class="page-subtitle">Empirical benchmarking of A* heuristics on the 8-Puzzle and constraint propagation algorithms on Sudoku using time.perf_counter().</p>
+</div>
+
+<!-- SECTION A: 8-PUZZLE HEURISTIC COMPARISON -->
+<section class="card comparison-section">
+    <div class="section-badge">SECTION A</div>
+    <h2 class="card-section-title">8-Puzzle Heuristic Comparison (Misplaced Tiles vs. Manhattan Distance)</h2>
+    <p class="helper-text">Run A* with both heuristics on the identical puzzle state to verify optimality and measure node expansion pruning.</p>
+
+    <div class="compare-controls">
+        <div class="form-group inline-group">
+            <label for="compare-puzzle-preset" class="form-label">Select Puzzle State:</label>
+            <select id="compare-puzzle-preset" class="form-select">
+                <option value="1,3,6,5,0,2,4,7,8" selected>Medium Solvable (8 Moves) — 1 3 6 / 5 0 2 / 4 7 8</option>
+                <option value="1,2,3,0,4,6,7,5,8">Standard Solvable (4 Moves) — 1 2 3 / 0 4 6 / 7 5 8</option>
+                <option value="1,2,3,4,0,6,7,5,8">Easy Solvable (2 Moves) — 1 2 3 / 4 0 6 / 7 5 8</option>
+                <option value="1,2,3,4,5,6,7,0,8">1-Move Away (1 Move) — 1 2 3 / 4 5 6 / 7 0 8</option>
+            </select>
+        </div>
+        <button id="btn-run-puzzle-compare" class="btn btn-primary">Compare 8-Puzzle Heuristics</button>
+    </div>
+
+    <div id="puzzle-compare-alert" class="alert d-none"></div>
+
+    <div id="puzzle-compare-loading" class="loading-box d-none">
+        <div class="spinner"></div>
+        <p>Executing A* with both heuristics on backend...</p>
+    </div>
+
+    <div id="puzzle-compare-results" class="results-table-container d-none">
+        <table class="table comparison-table">
+            <thead>
+                <tr>
+                    <th>Heuristic Function</th>
+                    <th>Solution Cost (Moves)</th>
+                    <th>Nodes Expanded</th>
+                    <th>Execution Runtime (ms)</th>
+                    <th>Admissibility / Optimality</th>
+                </tr>
+            </thead>
+            <tbody id="puzzle-compare-tbody">
+                <!-- Dynamically populated -->
+            </tbody>
+        </table>
+        <div class="analysis-box" id="puzzle-compare-analysis">
+            <!-- Dynamic analysis -->
+        </div>
+    </div>
+</section>
+
+<!-- SECTION B: SUDOKU CSP COMPARISON -->
+<section class="card comparison-section">
+    <div class="section-badge">SECTION B</div>
+    <h2 class="card-section-title">Sudoku CSP Algorithm Comparison (Plain, MRV, FC, AC-3)</h2>
+    <p class="helper-text">Benchmark all 4 CSP algorithms on the identical Sudoku grid to evaluate assignment counts, backtrack elimination, and runtime overhead.</p>
+
+    <div class="compare-controls">
+        <div class="form-group inline-group">
+            <label for="compare-sudoku-size" class="form-label">Dimension:</label>
+            <select id="compare-sudoku-size" class="form-select">
+                <option value="9" selected>9x9 Sudoku (Full Scale)</option>
+                <option value="4">4x4 Sudoku (Compact)</option>
+            </select>
+        </div>
+        <div class="form-group inline-group">
+            <label for="compare-sudoku-preset" class="form-label">Board Instance:</label>
+            <select id="compare-sudoku-preset" class="form-select">
+                <!-- Populated dynamically based on dimension -->
+            </select>
+        </div>
+        <button id="btn-run-sudoku-compare" class="btn btn-primary">Compare All 4 CSP Algorithms</button>
+    </div>
+
+    <div id="sudoku-compare-alert" class="alert d-none"></div>
+
+    <div id="sudoku-compare-loading" class="loading-box d-none">
+        <div class="spinner"></div>
+        <p>Executing Plain Backtracking, MRV, Forward Checking, and AC-3 on identical board...</p>
+    </div>
+
+    <div id="sudoku-compare-results" class="results-table-container d-none">
+        <table class="table comparison-table">
+            <thead>
+                <tr>
+                    <th>CSP Algorithm</th>
+                    <th>Assignments</th>
+                    <th>Backtracks</th>
+                    <th>Runtime (ms)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="sudoku-compare-tbody">
+                <!-- Dynamically populated -->
+            </tbody>
+        </table>
+        <div class="analysis-box">
+            <h4>Academic Evaluation &amp; Trade-off Analysis:</h4>
+            <ul class="analysis-list">
+                <li><strong>Backtrack Thrashing Elimination:</strong> Intelligent variable selection (MRV / "fail-first") and domain pruning (Forward Checking) reduce backtracks drastically compared to unguided row-major backtracking.</li>
+                <li><strong>Computational Overhead Trade-off:</strong> AC-3 performs rigorous arc revisions ($X_i \ne X_j$) at each assignment. On small 4x4 boards, queue maintenance introduces constant-factor overhead. On large 9x9 boards, it scales exponentially better by detecting inconsistencies at the root.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}

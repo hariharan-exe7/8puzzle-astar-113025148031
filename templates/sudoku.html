@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Sudoku CSP Solver — AI Search & CSP Solver{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Sudoku Constraint Satisfaction Problem (CSP) Solver</h1>
+    <p class="page-subtitle">Solve 4x4 and 9x9 Sudoku puzzles using Plain Backtracking, MRV ("Fail-First"), Forward Checking, and Arc Consistency (AC-3).</p>
+</div>
+
+<div class="sudoku-layout">
+    <!-- Controls & Input Grid -->
+    <div class="card sudoku-control-card">
+        <h2 class="card-section-title">Grid Configuration &amp; Algorithm</h2>
+
+        <!-- Dimension Selector -->
+        <div class="grid-size-tabs">
+            <button id="btn-size-4" class="tab-btn" data-size="4">4x4 Sudoku (2x2 Boxes)</button>
+            <button id="btn-size-9" class="tab-btn active" data-size="9">9x9 Sudoku (3x3 Boxes)</button>
+        </div>
+
+        <!-- Presets -->
+        <div class="form-group">
+            <label for="sudoku-preset" class="form-label">Load Preset Board:</label>
+            <select id="sudoku-preset" class="form-select">
+                <!-- Populated dynamically based on size -->
+            </select>
+        </div>
+
+        <!-- Algorithm Selection -->
+        <div class="form-group">
+            <label for="sudoku-algorithm" class="form-label">CSP Solving Algorithm:</label>
+            <select id="sudoku-algorithm" class="form-select">
+                <option value="ac3" selected>Backtracking + MRV + Forward Checking + AC-3</option>
+                <option value="fc">Backtracking + MRV + Forward Checking</option>
+                <option value="mrv">Backtracking + MRV (Minimum Remaining Values)</option>
+                <option value="plain">Plain Backtracking (Baseline DFS)</option>
+            </select>
+        </div>
+
+        <!-- Interactive Board Container -->
+        <div class="sudoku-board-wrapper">
+            <div id="sudoku-board" class="sudoku-grid size-9">
+                <!-- Rendered dynamically by JS -->
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-group">
+            <button id="btn-solve-sudoku" class="btn btn-primary">Solve Sudoku</button>
+            <button id="btn-load-sudoku" class="btn btn-secondary">Load Example</button>
+            <button id="btn-clear-sudoku" class="btn btn-outline">Clear Board</button>
+        </div>
+
+        <div id="sudoku-alert" class="alert d-none"></div>
+    </div>
+
+    <!-- Output & Statistics Card -->
+    <div class="card sudoku-result-card">
+        <h2 class="card-section-title">Solver Performance &amp; Assignment Analysis</h2>
+
+        <!-- Placeholder -->
+        <div id="sudoku-placeholder" class="placeholder-box">
+            <p>Enter given clues or select a preset, choose a CSP algorithm, and click <strong>Solve Sudoku</strong> to observe constraint propagation and search pruning in real time.</p>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="sudoku-loading" class="loading-box d-none">
+            <div class="spinner"></div>
+            <p>Executing CSP algorithm and constraint propagation...</p>
+        </div>
+
+        <!-- Solved Output Panel -->
+        <div id="sudoku-solution-panel" class="d-none">
+            <div class="metrics-ribbon">
+                <div class="metric-card">
+                    <span class="metric-num" id="metric-assignments">0</span>
+                    <span class="metric-label">Assignments Made</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-num" id="metric-backtracks">0</span>
+                    <span class="metric-label">Backtracks Triggered</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-num" id="metric-runtime">0</span>
+                    <span class="metric-label">Runtime (ms)</span>
+                </div>
+            </div>
+
+            <div class="csp-legend">
+                <span class="legend-item"><span class="legend-color clue-color"></span> Original Given Clue</span>
+                <span class="legend-item"><span class="legend-color solved-color"></span> CSP Assigned Value</span>
+            </div>
+
+            <!-- Algorithm Explanation Box -->
+            <div class="algorithm-insight-box">
+                <h3 id="insight-title" class="insight-title">Algorithm Mechanics</h3>
+                <p id="insight-text" class="insight-text"></p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

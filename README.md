@@ -323,6 +323,7 @@ The system is organized into modular layers:
 
 ```
 8-puzzle-astar/
+├── app.py                      # Flask web application server
 ├── main.py                     # Main interactive CLI application
 ├── src/
 │   ├── __init__.py             # Package initializer
@@ -332,6 +333,18 @@ The system is organized into modular layers:
 │   ├── hint_system.py          # Rule-based & optimal A* hint generation
 │   ├── explainable_ai.py       # XAI per-tile breakdown & search decision audit
 │   └── comparison.py           # Sudoku benchmarking & Search vs CSP study
+├── templates/
+│   ├── base.html               # Base layout template with top navigation
+│   ├── index.html              # Home landing page with feature cards
+│   ├── puzzle.html             # Interactive 8-Puzzle solver & XAI stepper
+│   ├── sudoku.html             # Interactive 4x4 and 9x9 Sudoku CSP solver
+│   ├── comparison.html         # Empirical benchmark comparison tables
+│   └── about.html              # Academic project theory and viva summary
+├── static/
+│   ├── css/
+│   │   └── style.css           # Clean white & dark blue academic dashboard styles
+│   └── js/
+│       └── main.js             # Vanilla JS frontend interactivity controller
 ├── tests/
 │   ├── test_solver.py          # Original 8-Puzzle solver unit tests (15 tests)
 │   ├── test_sudoku.py          # Sudoku CSP & AC-3 unit tests (14 tests)
@@ -352,29 +365,37 @@ The system is organized into modular layers:
 
 ## 22. Installation
 
-This project requires **Python 3.8 or higher** and uses **only the Python standard library**. No third-party packages or virtual environments are needed.
-
 1. Clone the repository:
    ```bash
    git clone https://github.com/[YOUR-USERNAME]/8-puzzle-astar.git
    cd 8-puzzle-astar
    ```
-2. Verify Python installation:
+2. Install dependencies (Flask):
    ```bash
-   python --version
+   pip install -r requirements.txt
    ```
 
 ---
 
 ## 23. How to Run
 
-### Interactive Application Menu
+### 1. Interactive Web Application (Flask Dashboard)
+Launch the local web server:
+```bash
+python app.py
+```
+Open your web browser at:
+```
+http://127.0.0.1:5000
+```
+
+### 2. Interactive Terminal Application Menu
 Launch the complete unified CLI suite:
 ```bash
 python main.py
 ```
 
-### Original 8-Puzzle Solver (Preserved Compatibility)
+### 3. Original 8-Puzzle Solver (Preserved Compatibility)
 The original standalone command remains fully functional:
 ```bash
 python src/puzzle_solver.py

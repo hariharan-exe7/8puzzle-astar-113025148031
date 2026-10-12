@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Home — AI Search & CSP Solver{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">AI Search &amp; Constraint Satisfaction Solver</h1>
+        <p class="hero-description">
+            An interactive Artificial Intelligence project demonstrating A* heuristic search,
+            Sudoku CSP solving, rule-based reasoning, and Explainable AI.
+        </p>
+    </div>
+</section>
+
+<!-- Feature Cards Grid -->
+<section class="cards-grid">
+    <!-- Card 1 -->
+    <div class="feature-card">
+        <div class="card-icon-badge">8P</div>
+        <h2 class="card-title">8-Puzzle Solver</h2>
+        <p class="card-text">
+            Solve sliding tile puzzles using optimal A* search. Compare Misplaced Tiles
+            and Manhattan Distance heuristics, evaluate inversion parity solvability,
+            receive rule-based hints, and inspect Explainable AI (XAI) step decompositions.
+        </p>
+        <div class="card-action">
+            <a href="{{ url_for('puzzle') }}" class="btn btn-primary">Open 8-Puzzle Solver &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="feature-card">
+        <div class="card-icon-badge">CSP</div>
+        <h2 class="card-title">Sudoku CSP Solver</h2>
+        <p class="card-text">
+            Solve 4x4 and 9x9 Sudoku puzzles using Constraint Satisfaction Problem techniques.
+            Experiment with Plain Backtracking, Minimum Remaining Values (MRV), Forward Checking,
+            and Arc Consistency (AC-3).
+        </p>
+        <div class="card-action">
+            <a href="{{ url_for('sudoku') }}" class="btn btn-primary">Open Sudoku Solver &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="feature-card">
+        <div class="card-icon-badge">VS</div>
+        <h2 class="card-title">Algorithm Comparison</h2>
+        <p class="card-text">
+            Compare heuristic search and CSP performance. View side-by-side empirical
+            measurements of solution cost, nodes expanded, assignments, backtracks,
+            and execution runtime on identical problem instances.
+        </p>
+        <div class="card-action">
+            <a href="{{ url_for('comparison') }}" class="btn btn-primary">View Comparisons &rarr;</a>
+        </div>
+    </div>
+</section>
+
+<!-- Project Highlights -->
+<section class="overview-box">
+    <h3 class="overview-heading">Academic Study Highlights</h3>
+    <div class="overview-grid">
+        <div class="overview-item">
+            <h4>Heuristic State-Space Search</h4>
+            <p>Guaranteed optimal pathfinding in combinatorial graphs with $f(n) = g(n) + h(n)$ using admissible heuristics.</p>
+        </div>
+        <div class="overview-item">
+            <h4>Constraint Propagation</h4>
+            <p>Active domain reduction through Forward Checking and the AC-3 algorithm to eliminate backtrack thrashing.</p>
+        </div>
+        <div class="overview-item">
+            <h4>Knowledge-Based Solvability</h4>
+            <p>Mathematical proof via inversion parity to instantly reject unreachable states before search invocation.</p>
+        </div>
+        <div class="overview-item">
+            <h4>Explainable AI (XAI)</h4>
+            <p>Per-tile distance attribution and priority queue expansion auditing using authentic runtime search traces.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
