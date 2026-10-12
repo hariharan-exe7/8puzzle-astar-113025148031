@@ -1,2 +1,10 @@
-# No external dependencies required
-# Python 3.8+
+# No external third-party dependencies required.
+# Developed and tested on Python 3.8+ (including Python 3.10 / 3.11 / 3.12).
+# This project uses exclusively the Python standard library:
+#   - heapq        (Priority queue for A* search)
+#   - itertools    (Deterministic tie-breaking counter)
+#   - collections  (deque for AC-3 arc queue)
+#   - time         (High-resolution time.perf_counter for benchmarking)
+#   - copy         (Board and state isolation)
+#   - unittest     (Automated testing framework)
+#   - sys, os      (Module paths and CLI execution)
